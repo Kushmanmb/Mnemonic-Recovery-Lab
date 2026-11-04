@@ -10,8 +10,8 @@ test("offline validator accepts published zero-entropy BIP-39 vector", async ({ 
   await page.locator("#word-12").fill("about");
   await page.getByRole("button", { name: "Check complete phrase" }).click();
   await expect(page.locator("#result")).toContainText("checksum valid");
-  await page.getByRole("button", { name: "Clear session" }).click();
   page.once("dialog", d => d.accept());
+  await page.getByRole("button", { name: "Clear session" }).click();
   await expect(page.locator("#word-1")).toHaveValue("");
 });
 test("hosted origins never display sensitive inputs", async ({ page }) => {
