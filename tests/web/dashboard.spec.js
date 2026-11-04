@@ -13,6 +13,139 @@ async function importWords(page, words = vector) {
   await expect(page.locator("#phrase")).toHaveValue("");
 }
 
+async function openHosted(page) {
+  await page.route("https://lab-8770.app.github.dev/**", async (route) => {
+    const local = new URL(route.request().url());
+    local.protocol = "http:";
+    local.hostname = "127.0.0.1";
+    local.port = "8770";
+    const response = await route.fetch({ url: local.toString() });
+    await route.fulfill({ response });
+  });
+  await page.goto("https://lab-8770.app.github.dev/");
+}
+
+for (const hosted of [false, true]) {
+  test(`touch editing all 12 slots on ${hosted ? "hosted public preview" : "loopback"}`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      !testInfo.project.use.hasTouch,
+      "Requires mobile touch emulation",
+    );
+    const requests = [];
+    const errors = [];
+    page.on("request", (request) => requests.push(request));
+    page.on("pageerror", (error) => errors.push(error.message));
+    if (hosted) {
+      await openHosted(page);
+      await expect(page.locator("#word-1")).toBeDisabled();
+      await page.locator("#start-preview").tap();
+      await expect(page.locator("#public-preview")).toBeVisible();
+    } else {
+      await open(page);
+      await expect(page.locator("#public-preview")).toBeHidden();
+    }
+    for (let index = 1; index <= 12; index += 1) {
+      const input = page.locator(`#word-${index}`);
+      const slot = page.locator(".word-slot").nth(index - 1);
+      const missing = slot.getByRole("checkbox");
+      const label = slot.locator(".missing-label");
+      await expect(missing).toBeChecked();
+      await expect(input).toBeEditable();
+      await input.tap();
+      await expect(input).toBeFocused();
+      await input.pressSequentially(vector[index - 1]);
+      await expect(input).toHaveValue(vector[index - 1]);
+      await expect(missing).toBeChecked();
+      await expect(slot.locator(".word-status")).toHaveText(
+        "Candidate / unconfirmed",
+      );
+      await label.tap();
+      await expect(missing).not.toBeChecked();
+      await expect(input).toBeEditable();
+      await label.tap();
+      await expect(missing).toBeChecked();
+      await expect(input).toHaveValue(vector[index - 1]);
+      const bounds = await label.boundingBox();
+      expect(bounds.height).toBeGreaterThanOrEqual(44);
+      await slot
+        .getByRole("button", { name: `Lock word ${index}`, exact: true })
+        .tap();
+      await expect(input).not.toBeEditable();
+      await expect(missing).not.toBeChecked();
+      await expect(missing).toBeDisabled();
+      await slot
+        .getByRole("button", { name: `Unlock word ${index}`, exact: true })
+        .tap();
+      await expect(input).toBeEditable();
+      await expect(missing).toBeEnabled();
+    }
+    await page.locator("label:has(#reveal)").tap();
+    await expect(page.locator("#word-12")).toHaveAttribute("type", "text");
+    if (hosted) {
+      // Use a complete valid candidate so missing-word validation cannot mask a bypass.
+      await page.locator("#validation-form").dispatchEvent("submit");
+      await page.locator("#run-fixture").dispatchEvent("click");
+    }
+    await page.getByRole("button", { name: "Lock word 1", exact: true }).tap();
+    await page.locator("#clear").tap();
+    for (const input of await page.locator(".word-entry input").all()) {
+      await expect(input).toHaveValue("");
+      await expect(input).toBeEditable();
+      await expect(input).toHaveAttribute("type", "password");
+    }
+    await expect(page.locator("#locked-count")).toHaveText("0");
+    await expect(page.locator("#missing-count")).toHaveText("12");
+    if (hosted) {
+      for (const id of [
+        "#check",
+        "#phrase",
+        "#import",
+        "#word-count",
+        "#run-fixture",
+        "#load-fixture",
+      ])
+        await expect(page.locator(id)).toBeDisabled();
+      await page.locator("#word-1").fill("zoo");
+      await expect(page.locator("#status-1")).toHaveText(
+        "Use public test words: abandon or about",
+      );
+      await expect(
+        page.getByRole("button", { name: "Lock word 1", exact: true }),
+      ).toBeDisabled();
+      expect(
+        requests.some((request) =>
+          new URL(request.url()).pathname.startsWith("/api/"),
+        ),
+      ).toBe(false);
+      expect(requests.every((request) => request.method() === "GET")).toBe(
+        true,
+      );
+      expect(
+        requests.every(
+          (request) =>
+            new URL(request.url()).origin === "https://lab-8770.app.github.dev",
+        ),
+      ).toBe(true);
+      expect(
+        await page.evaluate(() => [
+          localStorage.length,
+          sessionStorage.length,
+          document.cookie,
+        ]),
+      ).toEqual([0, 0, ""]);
+      expect(await page.evaluate(() => indexedDB.databases())).toEqual([]);
+      expect(await page.evaluate(() => caches.keys())).toEqual([]);
+      await page.reload();
+      await expect(page.locator("#word-1")).toBeDisabled();
+      await expect(page.locator("#word-1")).toHaveValue("");
+      await expect(page.locator("#start-preview")).toBeVisible();
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
 test("all word counts have numbered slots without horizontal overflow", async ({
   page,
 }) => {
@@ -245,7 +378,9 @@ test("failed local validation exits the busy state", async ({ page }) => {
   await expect(page.locator("#cancel")).toBeDisabled();
 });
 
-test("public fixture visual review", async ({ page }, testInfo) => {
+test("public fixture renders icons without browser errors", async ({
+  page,
+}) => {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await open(page);
@@ -253,11 +388,6 @@ test("public fixture visual review", async ({ page }, testInfo) => {
   await page.locator("#reveal").check();
   await expect(page.locator(".word-entry svg")).toHaveCount(12);
   await expect(page.locator("#word-12")).toHaveValue("about");
-  await page.screenshot({
-    path: testInfo.outputPath("public-fixture.png"),
-    fullPage: true,
-    scale: "css",
-  });
   expect(errors).toEqual([]);
 });
 
@@ -273,7 +403,7 @@ test("320px viewport fits the full 24-word layout", async ({ page }) => {
   ).toBe(true);
 });
 
-test("hosted origins cannot accept or submit recovery inputs", async ({
+test("hosted origins require explicit public-preview opt-in and cannot submit recovery inputs", async ({
   page,
 }) => {
   const apiRequests = [];
@@ -295,5 +425,8 @@ test("hosted origins cannot accept or submit recovery inputs", async ({
   await expect(page.locator("#word-1")).toBeDisabled();
   await expect(page.locator("#phrase")).toBeDisabled();
   await expect(page.locator("#check")).toBeDisabled();
+  await expect(page.locator(".missing-label input").first()).toBeDisabled();
+  await expect(page.locator("#clear")).toBeDisabled();
+  await expect(page.locator("#start-preview")).toBeEnabled();
   expect(apiRequests).toEqual([]);
 });

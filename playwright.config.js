@@ -16,6 +16,7 @@ export default defineConfig({
       name: "mobile",
       use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
     },
+    { name: "mobile-safari", use: { ...devices["iPhone 13"] } },
   ],
   webServer: {
     command: "python -m mnemonic_recovery serve --port 8770",

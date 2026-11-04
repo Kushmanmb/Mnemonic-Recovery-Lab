@@ -15,7 +15,7 @@ pip-audit .
 npm ci
 npm run check
 npm run build
-npx playwright install --with-deps chromium
+npx playwright install --with-deps chromium webkit
 npm test
 npm audit --audit-level=low
 ```
@@ -29,7 +29,7 @@ npm audit --audit-level=low
 - Security auditing may contact advisory/package services using package metadata, never phrase inputs. Runtime validation and experiments must work without network access.
 - Keep any future public-chain research separate from secret phrase processing.
 - Explain the privacy impact of any proposed feature and include focused tests.
-- Keep dashboard words in active-page memory only; never use browser storage or remote/forwarded origins for recovery inputs. Dictionary membership and checksum success must not change user locks or confirm missing words.
+- Keep dashboard words in active-page memory only; never use browser storage or remote/forwarded origins for real recovery inputs. The opt-in hosted preview is exclusively for public test words, uses only the public zero-entropy vector vocabulary, and must never send entered words or call APIs. Dictionary membership and checksum success must not change user locks or confirm missing words.
 - Edit `web/dashboard.js` and rebuild the committed `web/app.js` asset. Browser tests and screenshots must use only public fixtures; do not enable secret-bearing traces, videos, or other diagnostic captures.
 
 Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).

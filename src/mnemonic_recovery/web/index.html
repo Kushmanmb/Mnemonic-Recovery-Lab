@@ -27,6 +27,31 @@
         </button>
       </div>
 
+      <aside
+        id="public-preview"
+        class="warning"
+        hidden
+        aria-labelledby="preview-heading"
+      >
+        <div>
+          <strong id="preview-heading"
+            >Hosted preview: public test words only</strong
+          >
+          <p>
+            Never enter a real recovery phrase in Codespaces or a forwarded
+            preview. To test the mobile controls, use the public BIP-39 vector:
+            abandon in positions 1–11, about in position 12. Only these two
+            words can be locked here. Validation, phrase import, and experiments
+            stay disabled. No entered words are sent to the server. For real
+            recovery, run locally on a trusted offline device using the HTTP
+            127.0.0.1 URL.
+          </p>
+          <button id="start-preview" type="button">
+            Start public test preview
+          </button>
+        </div>
+      </aside>
+
       <section class="panel" aria-labelledby="validation-heading">
         <div class="panel-heading">
           <div>
