@@ -53,7 +53,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self._respond(status, body, "application/json; charset=utf-8")
 
     def do_GET(self) -> None:
-        asset = _ASSETS.get(urlsplit(self.path).path)
+        path = urlsplit(self.path).path
+        if path == "/favicon.ico":
+            self.send_response(204)
+            self.end_headers()
+            return
+        asset = _ASSETS.get(path)
         if asset is None:
             self._respond_json(404, {"error": "Not found."})
             return
@@ -103,7 +108,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 "valid": result.valid,
                 "word_count": result.word_count,
                 "invalid_words": [
-                    {"position": item.position, "word": item.word}
+                    {
+                        "position": item.position,
+                        "word": item.word,
+                        "suggestions": item.suggestions,
+                    }
                     for item in result.invalid_words
                 ],
                 "checksum_valid": result.checksum_valid,

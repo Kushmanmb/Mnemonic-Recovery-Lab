@@ -20,6 +20,9 @@ def test_loopback_dashboard_serves_assets_and_validates_locally() -> None:
             assert b"Offline mnemonic validation" in response.read()
             assert response.headers["Cache-Control"] == "no-store"
 
+        with urlopen(f"{origin}/favicon.ico") as response:
+            assert response.status == 204
+
         request = Request(
             f"{origin}/api/validate",
             data=json.dumps(

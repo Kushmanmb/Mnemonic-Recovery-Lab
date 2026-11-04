@@ -14,6 +14,10 @@ An offline-first toolkit for legitimate owners to validate BIP-39 English recove
 
 The app is a deliberately small, safe foundation. Wallet-specific derivation paths, public blockchain forensics, and address matching are not implemented. See the [roadmap](ROADMAP.md) for boundaries and future work.
 
+### Wallet compatibility notes
+
+BIP-39 phrases can be used by multiple wallets, but wallet support also depends on derivation paths, account conventions, and any optional BIP-39 passphrase. A passphrase changes the derived seed and is not validated by the mnemonic checksum; the same words with different passphrases produce different wallet material. This release does not derive or match wallet addresses and makes no compatibility claim for MetaMask, Trust Wallet, Coinbase Wallet, Ledger, Trezor, Ethereum, EVM, or Bitcoin wallets.
+
 ## Install and run
 
 Python 3.12 or later is required; CI verifies Python 3.13.
@@ -23,7 +27,7 @@ python -m pip install .
 python -m mnemonic_recovery
 ```
 
-Open the loopback URL printed in the terminal (default `http://127.0.0.1:8765`). The server binds to `127.0.0.1` only. Press `Ctrl+C` to stop it. To select a port, use `python -m mnemonic_recovery --port 8766`.
+Open the loopback URL printed in the terminal (default `http://127.0.0.1:8765`). The server binds to `127.0.0.1` only. Press `Ctrl+C` to stop it. To select a port, use `python -m mnemonic_recovery serve --port 8766`.
 
 For terminal-only validation, use `python -m mnemonic_recovery validate`. The phrase is entered with terminal echo disabled. Do not pass a phrase as a command-line argument.
 

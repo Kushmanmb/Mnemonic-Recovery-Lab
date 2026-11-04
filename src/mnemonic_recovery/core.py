@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass
+from difflib import get_close_matches
 from typing import Final
 
 from mnemonic import Mnemonic
@@ -19,6 +20,7 @@ class InvalidWord:
 
     position: int
     word: str
+    suggestions: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -50,7 +52,13 @@ def validate_mnemonic(phrase: str) -> ValidationResult:
 
     words = unicodedata.normalize("NFKD", phrase).lower().split()
     invalid_words = tuple(
-        InvalidWord(position, word)
+        InvalidWord(
+            position,
+            word,
+            tuple(get_close_matches(word, _ENGLISH.wordlist, n=3, cutoff=0.65))
+            if len(word) <= 16
+            else (),
+        )
         for position, word in enumerate(words, start=1)
         if word not in _ENGLISH_WORDS
     )

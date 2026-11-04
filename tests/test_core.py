@@ -15,12 +15,21 @@ def test_official_bip39_vector_is_valid() -> None:
     assert result.checksum_valid is True
 
 
+def test_official_english_wordlist_has_2048_entries() -> None:
+    wordlist = Mnemonic("english").wordlist
+
+    assert len(wordlist) == 2048
+    assert wordlist[0] == "abandon"
+    assert wordlist[-1] == "zoo"
+
+
 def test_invalid_word_is_reported_by_position_without_phrase_retention() -> None:
-    result = validate_mnemonic("abandon " * 10 + "notaword about")
+    result = validate_mnemonic("abandon " * 10 + "abandonn about")
 
     assert not result.valid
     assert result.invalid_words[0].position == 11
-    assert result.invalid_words[0].word == "notaword"
+    assert result.invalid_words[0].word == "abandonn"
+    assert "abandon" in result.invalid_words[0].suggestions
     assert not hasattr(result, "phrase")
 
 

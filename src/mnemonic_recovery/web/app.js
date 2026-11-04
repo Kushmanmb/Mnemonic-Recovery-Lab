@@ -45,7 +45,12 @@ form.addEventListener("submit", async (event) => {
     const invalid = data.invalid_words || [];
     if (invalid.length > 0) {
       showResult(
-        `Unknown English words: ${invalid.map((item) => `${item.word} (position ${item.position})`).join(", ")}`,
+        `Unknown English words: ${invalid.map((item) => {
+          const suggestions = item.suggestions.length > 0
+            ? `; possible spelling: ${item.suggestions.join(", ")}`
+            : "";
+          return `${item.word} (position ${item.position}${suggestions})`;
+        }).join(", ")}`,
         false,
       );
     } else if (data.checksum_valid) {

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from getpass import getpass
 
 from mnemonic_recovery.core import validate_mnemonic
@@ -20,6 +21,10 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "validate":
+        if not sys.stdin.isatty():
+            raise SystemExit(
+                "Validation requires an interactive terminal to protect input."
+            )
         print("Sensitive input: only continue on a device you trust.")
         result = validate_mnemonic(getpass("Recovery phrase (input hidden): "))
         if result.invalid_words:
