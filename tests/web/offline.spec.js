@@ -11,9 +11,11 @@ test("offline validator accepts published zero-entropy BIP-39 vector without net
   page.on("request", request => {
     if (/^https?:/i.test(request.url())) outbound.push(request.url());
   });
-  await context.setOffline(true);
+  await context.route(/^https?:\/\//i, route => route.abort());
   await page.goto(appUrl);
   await expect(page.locator(".slot")).toHaveCount(12);
+  // WebKit cannot navigate to file URLs with offline emulation already enabled.
+  await context.setOffline(true);
   for (let i = 1; i <= 11; i++) await page.locator("#word-" + i).fill("abandon");
   await page.locator("#word-12").fill("about");
   await page.getByRole("button", { name: "Check complete phrase" }).click();
