@@ -11,8 +11,8 @@ test("offline validator accepts published zero-entropy BIP-39 vector without net
   page.on("request", request => {
     if (/^https?:/i.test(request.url())) outbound.push(request.url());
   });
-  await context.setOffline(true);
   await page.goto(appUrl);
+  await context.setOffline(true);
   await expect(page.locator(".slot")).toHaveCount(12);
   for (let i = 1; i <= 11; i++) await page.locator("#word-" + i).fill("abandon");
   await page.locator("#word-12").fill("about");
