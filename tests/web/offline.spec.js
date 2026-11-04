@@ -45,3 +45,17 @@ test("hosted origins block secret entry even when assets load", async ({ page })
   await expect(page.locator("#workspace")).toBeHidden();
   await expect(page.locator("input[type=password]")).toHaveCount(0);
 });
+
+test("single missing word scan finds published vector completion entirely offline", async ({ page, context }) => {
+  const outbound = [];
+  page.on("request", request => { if (/^https?:/i.test(request.url())) outbound.push(request.url()); });
+  await context.route(/^https?:\/\//i, route => route.abort());
+  await page.goto(appUrl);
+  await context.setOffline(true);
+  for (let i = 1; i <= 11; i++) await page.locator("#word-" + i).fill("abandon");
+  await page.locator(".slot").nth(11).locator('input[type="checkbox"]').check();
+  await page.getByRole("button", { name: "Find candidates for one missing word" }).click();
+  await expect(page.locator("#result")).toContainText("checksum-valid possibilities", { timeout: 120000 });
+  await expect(page.locator("#candidates")).toContainText("about");
+  expect(outbound).toEqual([]);
+});

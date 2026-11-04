@@ -75,6 +75,7 @@
       slots.push(slot);
     }
     update();
+    $("candidates").textContent = "";
     result("");
   }
   function clear() {
@@ -84,24 +85,20 @@
       slot.missing.checked = false;
     }
     update();
+    $("candidates").textContent = "";
     result("Session cleared.");
   }
-  async function check() {
-    const candidate = slots.map(s => normalize(s.input.value));
-    const invalid = candidate.map((w,i) => !indices.has(w) ? i+1 : null).filter(Boolean);
-    if (invalid.length) { result("Enter a valid BIP-39 English word in every position. Check positions: " + invalid.join(", ") + ".", "bad"); return; }
-    if (!globalThis.crypto?.subtle) { result("Secure local cryptography is unavailable in this browser. Use a modern browser with a local file.", "bad"); return; }
+  async function checksumValid(candidate) {
+    if (!globalThis.crypto?.subtle) throw Error("Local SHA-256 unavailable");
     const length = candidate.length;
     const bits = length * 11;
     const entropyBits = bits - length / 3;
     const packed = new Uint8Array(Math.ceil(bits / 8));
     for (let i = 0; i < length; i++) {
       const index = indices.get(candidate[i]);
-      for (let bit = 0; bit < 11; bit++) {
-        if (index & (1 << (10 - bit))) {
-          const position = i * 11 + bit;
-          packed[position >> 3] |= 1 << (7 - (position & 7));
-        }
+      for (let bit = 0; bit < 11; bit++) if (index & (1 << (10 - bit))) {
+        const position = i * 11 + bit;
+        packed[position >> 3] |= 1 << (7 - (position & 7));
       }
     }
     const entropy = packed.slice(0, entropyBits / 8);
@@ -109,13 +106,53 @@
     let match = true;
     for (let bit = 0; bit < length / 3; bit++) {
       const position = entropyBits + bit;
-      const actual = (packed[position >> 3] >> (7 - (position & 7))) & 1;
-      const expected = (digest[bit >> 3] >> (7 - (bit & 7))) & 1;
-      if (actual !== expected) match = false;
+      if (((packed[position >> 3] >> (7 - (position & 7))) & 1) !== ((digest[bit >> 3] >> (7 - (bit & 7))) & 1)) match = false;
     }
     packed.fill(0); entropy.fill(0); digest.fill(0);
+    return match;
+  }
+  async function check() {
+    const candidate = slots.map(s => normalize(s.input.value));
+    const invalid = candidate.map((w,i) => !indices.has(w) ? i+1 : null).filter(Boolean);
+    if (invalid.length) { result("Enter a valid BIP-39 English word in every position. Check positions: " + invalid.join(", ") + ".", "bad"); return; }
+    const match = await checksumValid(candidate);
     result(match ? "BIP-39 checksum valid. This does not confirm wallet ownership or identify missing words." : "BIP-39 checksum invalid. Check the entered words and their order.", match ? "ok" : "bad");
   }
+  async function scanOne() {
+    const missing = slots.map((s, i) => s.missing.checked ? i : -1).filter(i => i >= 0);
+    if (missing.length !== 1) {
+      result("This bounded scan supports exactly one missing position. Four missing words require narrowing the search; 2,048^4 combinations are not practical to scan here.", "bad");
+      return;
+    }
+    const candidate = slots.map(s => normalize(s.input.value));
+    if (candidate.some((word, i) => i !== missing[0] && !indices.has(word))) {
+      result("Enter valid BIP-39 words in all positions except the marked missing position.", "bad");
+      return;
+    }
+    const button = $("scan-one");
+    button.disabled = true;
+    $("candidates").textContent = "";
+    result("Checking 2,048 local candidates; no network requests...");
+    const found = [];
+    try {
+      for (let i = 0; i < words.length; i++) {
+        candidate[missing[0]] = words[i];
+        if (await checksumValid(candidate)) found.push(words[i]);
+        if (i % 128 === 0) {
+          result("Checked " + (i + 1) + " / 2,048 locally...");
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+      }
+      $("candidates").textContent = "Checksum-valid words for position " + (missing[0] + 1) + ": " + found.join(", ");
+      result(found.length + " checksum-valid possibilities. These are not confirmed wallet recovery words.", "ok");
+    } catch {
+      result("Local scan failed. Verify local cryptography support.", "bad");
+    } finally {
+      candidate.fill("");
+      button.disabled = false;
+    }
+  }
+  $("scan-one").addEventListener("click", () => { scanOne(); });
   $("length").addEventListener("change", (event) => {
     if (slots.some(s => s.input.value || s.locked || s.missing.checked) && !confirm("Changing length clears this session. Continue?")) {
       event.target.value = String(slots.length);
