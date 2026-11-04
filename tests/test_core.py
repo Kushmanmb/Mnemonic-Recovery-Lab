@@ -6,6 +6,25 @@ from mnemonic_recovery import estimate_search_space, validate_mnemonic
 VALID_VECTOR = "abandon " * 11 + "about"
 
 
+@pytest.mark.parametrize(
+    ("entropy", "phrase"),
+    [
+        ("00" * 16, "abandon " * 11 + "about"),
+        ("00" * 24, "abandon " * 17 + "agent"),
+        ("00" * 32, "abandon " * 23 + "art"),
+        ("ff" * 16, "zoo " * 11 + "wrong"),
+        (
+            "7f" * 16,
+            "legal winner thank year wave sausage worth useful "
+            "legal winner thank yellow",
+        ),
+    ],
+)
+def test_published_entropy_and_mnemonic_pairs(entropy: str, phrase: str) -> None:
+    assert Mnemonic("english").to_mnemonic(bytes.fromhex(entropy)) == phrase
+    assert validate_mnemonic(phrase).valid
+
+
 def test_official_bip39_vector_is_valid() -> None:
     result = validate_mnemonic(VALID_VECTOR)
 
