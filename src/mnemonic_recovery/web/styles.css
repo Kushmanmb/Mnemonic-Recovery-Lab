@@ -13,6 +13,9 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 body {
   margin: 0;
   min-width: 320px;
@@ -195,6 +198,8 @@ label input:not([type="checkbox"]) {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
 }
 .counts {
   display: flex;
@@ -246,6 +251,8 @@ label input:not([type="checkbox"]) {
   align-items: center;
   gap: 4px;
   color: var(--warning);
+  min-height: 44px;
+  cursor: pointer;
 }
 .word-entry {
   display: flex;

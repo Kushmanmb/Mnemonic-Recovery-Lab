@@ -30,6 +30,7 @@ const icons = {
 };
 const $ = (selector) => document.querySelector(selector);
 const grid = $("#word-grid");
+let publicPreview = false;
 let slots = [];
 let dictionary = new Set();
 let fixtures = [];
@@ -63,18 +64,15 @@ function invalidate() {
 function setBusy(busy) {
   $("#cancel").disabled = !busy;
   $("#cancel-fixture").disabled = !busy;
-  $("#check").disabled = busy || !dictionary.size;
+  $("#check").disabled = !isLoopback || busy || !dictionary.size;
   $("#run-fixture").disabled = busy || !fixtures.length;
   $("#load-fixture").disabled = busy || !fixtures.length;
   $("#fixture").disabled = busy || !fixtures.length;
-  $("#budget").disabled = busy;
-  if (!isLoopback) {
-    document
-      .querySelectorAll("input, textarea, select, button")
-      .forEach((control) => {
-        control.disabled = true;
-      });
-  }
+  $("#budget").disabled = busy || !isLoopback;
+  for (const id of ["#word-count", "#phrase", "#import"])
+    $(id).disabled = !isLoopback;
+  for (const id of ["#clear", "#reveal"])
+    $(id).disabled = !isLoopback && !publicPreview;
 }
 function normalized(value) {
   return value.normalize("NFKD").toLowerCase().trim();
@@ -86,9 +84,10 @@ function update() {
     const valid = dictionary.has(word);
     slot.root.classList.toggle("is-missing", slot.missing.checked);
     slot.root.classList.toggle("is-locked", slot.locked);
+    slot.input.disabled = !isLoopback && !publicPreview;
     slot.input.readOnly = slot.locked;
-    slot.missing.disabled = slot.locked;
-    slot.lock.disabled = !valid && !slot.locked;
+    slot.missing.disabled = slot.input.disabled || slot.locked;
+    slot.lock.disabled = slot.input.disabled || (!valid && !slot.locked);
     slot.lock.setAttribute("aria-pressed", String(slot.locked));
     slot.lock.setAttribute(
       "aria-label",
@@ -101,7 +100,9 @@ function update() {
       : !dictionary.size
         ? "Word list unavailable"
         : !valid
-          ? "Not a BIP-39 English word"
+          ? publicPreview
+            ? "Use public test words: abandon or about"
+            : "Not a BIP-39 English word"
           : slot.locked
             ? "Known word / locked by you"
             : slot.missing.checked
@@ -252,6 +253,7 @@ $("#clear").addEventListener("click", () => {
 $("#cancel").addEventListener("click", cancelActive);
 $("#cancel-fixture").addEventListener("click", cancelActive);
 $("#import").addEventListener("click", () => {
+  if (!isLoopback) return;
   const words = normalized($("#phrase").value).split(/\s+/);
   $("#phrase").value = "";
   invalidate();
@@ -266,7 +268,7 @@ $("#import").addEventListener("click", () => {
 });
 $("#validation-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (active || !dictionary.size) return;
+  if (!isLoopback || active || !dictionary.size) return;
   if (slots.some((slot) => !dictionary.has(normalized(slot.input.value)))) {
     message(
       "Every position needs a BIP-39 English word before checking this candidate.",
@@ -340,6 +342,7 @@ $("#load-fixture").addEventListener("click", () => {
   resetProgress();
 });
 $("#run-fixture").addEventListener("click", async () => {
+  if (!isLoopback) return;
   const fixture = fixtures.find((item) => item.id === $("#fixture").value);
   const positions = slots.flatMap((slot, index) =>
     slot.missing.checked ? [index + 1] : [],
@@ -448,6 +451,21 @@ window.addEventListener("pageshow", (event) => {
 });
 render(12);
 paintIcons();
+$("#public-preview").hidden = isLoopback;
+$("#start-preview").addEventListener("click", () => {
+  if (isLoopback) return;
+  publicPreview = true;
+  // Public zero-entropy BIP-39 vector vocabulary; no hosted reference/API calls.
+  dictionary = new Set(["abandon", "about"]);
+  $("#start-preview").hidden = true;
+  $("#reference-status").textContent = "Public test vocabulary only";
+  $(".local-status").textContent = "PUBLIC TEST PREVIEW";
+  invalidate();
+  update();
+  message(
+    "Public test preview ready. Use abandon in positions 1-11 and about in position 12. Checks, imports, and experiments remain disabled; no words are sent.",
+  );
+});
 if (isLoopback) {
   fetch("/api/reference", {
     cache: "no-store",
@@ -481,6 +499,8 @@ if (isLoopback) {
   setBusy(false);
   $("#reference-status").textContent = "Non-loopback origin blocked";
   message(
-    "Recovery input is disabled on hosted or forwarded origins. Use HTTP loopback on a trusted offline device.",
+    "Recovery input is disabled on hosted or forwarded origins. Use HTTP loopback on a trusted offline device, or start the public-test-only preview above.",
   );
+  $(".local-status").textContent = "RECOVERY INPUT BLOCKED";
+  update();
 }

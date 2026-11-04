@@ -40,6 +40,6 @@ jobs:
       - run: npm run check
       - run: npm run build
       - run: git diff --exit-code -- src/mnemonic_recovery/web/app.js
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm test
       - run: npm audit --audit-level=low
