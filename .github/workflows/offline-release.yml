@@ -1,0 +1,49 @@
+name: Offline validator release candidate
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'offline-app/**'
+      - 'tests/web/offline.spec.js'
+      - '.github/workflows/offline-release.yml'
+permissions:
+  contents: read
+jobs:
+  verify-and-package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install .
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Browser security and BIP-39 tests
+        run: npx playwright test tests/web/offline.spec.js
+      - name: Check bundled scripts parse
+        run: node --check offline-app/app.js && node --check offline-app/wordlist.js
+      - name: Create auditable release candidate
+        shell: bash
+        run: |
+          mkdir -p dist
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          folder = Path('offline-app')
+          files = ['index.html', 'styles.css', 'app.js', 'wordlist.js', 'README.md']
+          with ZipFile('dist/gen0x-offline-validator-rc.zip', 'w', ZIP_DEFLATED) as archive:
+              for file in files:
+                  archive.write(folder / file, arcname='offline-app/' + file)
+          PY
+          cd dist
+          sha256sum gen0x-offline-validator-rc.zip > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gen0x-offline-validator-release-candidate
+          path: dist/
+          if-no-files-found: error
