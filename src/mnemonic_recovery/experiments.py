@@ -61,6 +61,13 @@ class Benchmark:
         return median(run.candidates_per_second for run in self.runs)
 
 
+def fixture_words(fixture: str) -> tuple[str, ...]:
+    """Return public test material only; never accepts user entropy or phrases."""
+    if fixture not in _ENTROPY:
+        raise ValueError("select a built-in public or disposable fixture")
+    return tuple(Mnemonic("english").to_mnemonic(_ENTROPY[fixture]).split())
+
+
 def run_experiment(
     fixture: str,
     missing_positions: Sequence[int],

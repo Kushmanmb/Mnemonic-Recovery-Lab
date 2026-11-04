@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="referrer" content="no-referrer">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
     <title>Mnemonic Recovery Lab</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css" />
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -17,11 +17,15 @@
       <span class="local-status"><i aria-hidden="true"></i> LOCAL SESSION</span>
     </header>
     <main>
-      <section class="intro">
-        <p class="eyebrow">OFFLINE-FIRST · READ-ONLY · OPEN SOURCE</p>
-        <h1>Recovery analysis,<br><span>without the exposure.</span></h1>
-        <p class="lede">Validate a BIP-39 English phrase on this device. Your phrase is handled only by this local app and is never saved or logged.</p>
-      </section>
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">BIP-39 / ENGLISH</p>
+          <h1>Recovery workspace</h1>
+        </div>
+        <button id="clear" class="secondary" type="button">
+          <i data-lucide="rotate-ccw" aria-hidden="true"></i>Clear session
+        </button>
+      </div>
 
       <section class="panel" aria-labelledby="validation-heading">
         <div class="panel-heading">
@@ -29,21 +33,73 @@
             <p class="eyebrow">01 / PHRASE CHECK</p>
             <h2 id="validation-heading">Offline mnemonic validation</h2>
           </div>
-          <span class="badge">BIP-39 · ENGLISH</span>
+          <span id="reference-status" role="status"
+            >Loading local word list</span
+          >
         </div>
         <div class="warning" role="note">
           <span aria-hidden="true">!</span>
-          <p>Only continue on a device you control and trust. A checksum-valid phrase is <strong>not</strong> proof that it belongs to a wallet or is the correct recovery phrase.</p>
+          <p>
+            Only continue on a device you control and trust. A checksum-valid
+            phrase does <strong>not</strong> confirm a missing word, the correct
+            phrase, or wallet ownership. Never fund a public test fixture.
+          </p>
         </div>
-        <form id="validation-form">
-          <label for="phrase">Recovery phrase</label>
-          <textarea id="phrase" name="phrase" rows="4" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter your phrase only when ready"></textarea>
-          <div class="form-footer">
-            <span>12 · 15 · 18 · 21 · or 24 words</span>
-            <button type="submit">Validate locally <span aria-hidden="true">→</span></button>
+        <div class="workspace-toolbar">
+          <label for="word-count"
+            >Phrase length<select id="word-count">
+              <option value="12">12 words</option>
+              <option value="15">15 words</option>
+              <option value="18">18 words</option>
+              <option value="21">21 words</option>
+              <option value="24">24 words</option>
+            </select></label
+          >
+          <label class="toggle"
+            ><input id="reveal" type="checkbox" />Show words</label
+          >
+          <div class="counts">
+            <span><b id="entered-count">0</b> entered</span
+            ><span><b id="locked-count">0</b> locked</span
+            ><span><b id="missing-count">12</b> missing</span>
+          </div>
+        </div>
+        <form id="validation-form" autocomplete="off">
+          <div
+            id="word-grid"
+            class="word-grid"
+            role="group"
+            aria-label="Numbered recovery words"
+          ></div>
+          <div class="actionbar">
+            <span id="candidate-count">0 candidates checked</span>
+            <div class="actions">
+              <button id="cancel" class="secondary" type="button" disabled>
+                <i data-lucide="square" aria-hidden="true"></i>Cancel</button
+              ><button id="check" type="submit" disabled>
+                <i data-lucide="check" aria-hidden="true"></i>Check candidate
+              </button>
+            </div>
           </div>
         </form>
         <div id="result" class="result" aria-live="polite" hidden></div>
+        <details class="import">
+          <summary>Phrase input</summary>
+          <label for="phrase">Complete phrase</label
+          ><textarea
+            id="phrase"
+            rows="3"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            data-1p-ignore
+            data-lpignore="true"
+          ></textarea
+          ><button id="import" type="button" class="secondary">
+            <i data-lucide="clipboard-list" aria-hidden="true"></i>Fill unlocked
+            slots
+          </button>
+        </details>
       </section>
 
       <section class="panel analysis-panel" aria-labelledby="positions-heading">
@@ -54,36 +110,73 @@
           </div>
           <span class="badge">NO CANDIDATES GENERATED</span>
         </div>
-        <p class="analysis-copy">Select the phrase length and the positions you do not know. Estimates show theoretical combinations and expected checksum filtering only.</p>
-        <label for="word-count">Phrase length</label>
-        <select id="word-count">
-          <option value="12">12 words</option>
-          <option value="15">15 words</option>
-          <option value="18">18 words</option>
-          <option value="21">21 words</option>
-          <option value="24">24 words</option>
-        </select>
-        <p class="position-label">Select missing positions</p>
-        <div id="position-grid" class="position-grid" role="group" aria-label="Missing word positions"></div>
-        <div id="estimate" class="estimate" aria-live="polite">Select at least one missing position to see an estimate.</div>
-        <p class="estimate-caveat">Checksum-valid does not mean the phrase is correct or belongs to a wallet. This tool does not search the space.</p>
+        <p id="missing-positions" class="position-label"></p>
+        <div id="estimate" class="estimate" aria-live="polite">
+          Select at least one missing position to see an estimate.
+        </div>
+        <p class="estimate-caveat">
+          Checksum-valid does not mean the phrase is correct or belongs to a
+          wallet. This tool does not search the space.
+        </p>
       </section>
 
-      <section class="cards" aria-label="Analysis scope">
-        <article class="info-card">
-          <p class="eyebrow">03 / WALLET RESEARCH</p>
-          <h3>Compatibility &amp; forensics</h3>
-          <p>Wallet-specific derivation and public blockchain research are not part of this initial release. No address is checked or assumed to be controlled by a phrase.</p>
-          <span class="status">NOT CONNECTED</span>
-        </article>
-        <article class="info-card">
-          <p class="eyebrow">SECURITY / LOCAL ONLY</p>
-          <h3>Secrets stay on-device</h3>
-          <p>The local service has no telemetry, cloud processing, storage, private-key operations, or transaction signing.</p>
-          <span class="status">NO REMOTE LOOKUPS</span>
-        </article>
+      <section class="experiments" aria-labelledby="experiment-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">PUBLIC TEST MATERIAL ONLY</p>
+            <h2 id="experiment-heading">Fixture experiment</h2>
+          </div>
+          <i data-lucide="flask-conical" aria-hidden="true"></i>
+        </div>
+        <div class="experiment-controls">
+          <label for="fixture"
+            >Disposable fixture<select id="fixture" disabled></select></label
+          ><label for="budget"
+            >Candidate budget<input
+              id="budget"
+              type="number"
+              min="1"
+              max="100000"
+              step="1"
+              value="2048" /></label
+          ><button id="load-fixture" class="secondary" type="button" disabled>
+            <i data-lucide="folder-open" aria-hidden="true"></i>Load fixture</button
+          ><button id="run-fixture" type="button" disabled>
+            <i data-lucide="play" aria-hidden="true"></i>Run fixture
+          </button>
+        </div>
+        <div class="progress-heading">
+          <span id="progress-status" role="status">Idle</span
+          ><span id="progress-count">0 checked</span
+          ><button id="cancel-fixture" class="secondary" type="button" disabled>
+            <i data-lucide="square" aria-hidden="true"></i>Cancel run
+          </button>
+        </div>
+        <progress
+          id="progress"
+          value="0"
+          max="1"
+          aria-label="Candidate checks within run budget"
+        ></progress>
+        <dl class="run-stats">
+          <div>
+            <dt>Checksum-valid</dt>
+            <dd id="checksum-count">0</dd>
+          </div>
+          <div>
+            <dt>Exact fixture matches</dt>
+            <dd id="match-count">0</dd>
+          </div>
+          <div>
+            <dt>Checks / second</dt>
+            <dd id="rate">0</dd>
+          </div>
+        </dl>
       </section>
-      <p class="footnote">No telemetry · No cloud processing · No transaction signing · <a href="https://github.com/Kushmanmb/Mnemonic-Recovery-Lab/blob/main/SECURITY.md">Security model</a></p>
+      <p class="footnote">
+        No cloud processing. No telemetry. No persistent storage. No key
+        derivation or signing.
+      </p>
     </main>
   </body>
 </html>

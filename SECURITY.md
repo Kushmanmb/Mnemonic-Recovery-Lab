@@ -4,14 +4,16 @@ Mnemonic Recovery Lab is an early-stage research utility, not a wallet and not a
 
 ## Current safeguards
 
-- The dashboard binds only to `127.0.0.1`; its API accepts same-origin requests for a fixed route.
+- The dashboard binds only to `127.0.0.1`; validation and fixture-stream POST endpoints require an exact loopback Host, same-origin Origin, and JSON content type. The browser disables recovery input and reference fetching on non-HTTP/non-127.0.0.1 origins. Never use real phrases through cloud-hosted or tunneled development sessions: a transparent loopback tunnel is not detectable.
 - The UI and Python service have no remote API calls, analytics, telemetry, browser storage, or file writes.
 - HTTP request logging is disabled. Responses omit the submitted phrase.
-- The phrase field is cleared before a loopback validation request is sent. Terminal validation uses hidden input, does not echo invalid words, and does not accept a phrase as a command-line argument.
+- The bulk phrase textarea is cleared on import. Numbered slots are masked by default and remain in active-page memory for manual candidate checks; clear-session/navigation handlers discard them on a best-effort basis. They are not placed in URLs, cookies, browser storage, or files. Terminal validation still uses hidden input, does not echo invalid words, and does not accept phrases as command-line arguments.
+- Dictionary membership and checksum results never automatically lock words or confirm missing positions. A lock reflects only the user's explicit assertion. A checksum-valid manual candidate is not a confirmed recovery.
 - Candidate testing accepts only built-in public/disposable fixture identifiers, never arbitrary phrases or user-supplied entropy. Per-run candidate checks are capped at 100,000, benchmark repetitions at 10. Progress and final records contain aggregate metrics only. Cancellation is checked between candidates.
+- The public reference endpoint returns only the installed English word list and built-in fixture words. The fixture stream accepts only fixture ID, positions, and budget, never entered words. Disconnecting cancels on the next failed progress write (every 32 candidates); partial counts do not imply recovery. The browser suppresses late responses after cancellation or input edits.
 - The application has no general-purpose recovery search, key/address derivation, blockchain lookup, signing, or transaction features. Fixture wallets are public test material and must never receive funds.
 - CI uses only public BIP-39 test vectors and deterministic synthetic phrases.
-- CI runs source security scanning and dependency auditing. The dependency auditor contacts package/advisory services with package metadata only; it is not part of offline runtime processing.
+- CI runs source security scanning, Python/npm dependency auditing, a reproducible frontend build check, and browser privacy/regression tests. Auditors contact package/advisory services with package metadata only; they are not part of offline runtime processing. Browser traces and automatic video/screenshots are disabled; explicit visual-test screenshots use public fixture words only.
 
 ## Threat model and limitations
 
