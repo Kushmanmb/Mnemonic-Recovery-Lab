@@ -63,7 +63,9 @@ def test_server_rejects_cross_origin_validation_request() -> None:
     try:
         with pytest.raises(HTTPError) as error:
             urlopen(request)
-        assert error.value.code == 403
+        with error.value as response:
+            assert response.code == 403
+            response.read()
     finally:
         server.shutdown()
         thread.join()

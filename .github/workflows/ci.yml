@@ -21,3 +21,5 @@ jobs:
       - run: ruff format --check .
       - run: mypy src
       - run: pytest
+      - run: bandit -r src -q
+      - run: pip-audit .
