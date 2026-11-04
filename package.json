@@ -1,0 +1,17 @@
+{
+  "name": "mnemonic-recovery-lab-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/mnemonic_recovery/web/dashboard.js --bundle --minify --outfile=src/mnemonic_recovery/web/app.js",
+    "check": "node --check src/mnemonic_recovery/web/dashboard.js && node --check playwright.config.js && prettier --check src/mnemonic_recovery/web/dashboard.js src/mnemonic_recovery/web/index.html src/mnemonic_recovery/web/styles.css playwright.config.js tests/web/dashboard.spec.js package.json",
+    "format": "prettier --write src/mnemonic_recovery/web/dashboard.js src/mnemonic_recovery/web/index.html src/mnemonic_recovery/web/styles.css playwright.config.js tests/web/dashboard.spec.js package.json",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "esbuild": "0.25.12",
+    "lucide": "0.468.0",
+    "prettier": "3.6.2"
+  }
+}

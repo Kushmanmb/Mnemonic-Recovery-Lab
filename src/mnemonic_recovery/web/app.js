@@ -1,113 +1,28 @@
-"use strict";
+(()=>{var z=(e,t,o=[])=>{let r=document.createElementNS("http://www.w3.org/2000/svg",e);return Object.keys(t).forEach(f=>{r.setAttribute(f,String(t[f]))}),o.length&&o.forEach(f=>{let p=z(...f);r.appendChild(p)}),r},W=([e,t,o])=>z(e,t,o);var K=e=>Array.from(e.attributes).reduce((t,o)=>(t[o.name]=o.value,t),{}),J=e=>typeof e=="string"?e:!e||!e.class?"":e.class&&typeof e.class=="string"?e.class.split(" "):e.class&&Array.isArray(e.class)?e.class:"",Z=e=>e.flatMap(J).map(o=>o.trim()).filter(Boolean).filter((o,r,f)=>f.indexOf(o)===r).join(" "),j=e=>e.replace(/(\w)(\w*)(_|-|\s*)/g,(t,o,r)=>o.toUpperCase()+r.toLowerCase()),D=(e,{nameAttr:t,icons:o,attrs:r})=>{let f=e.getAttribute(t);if(f==null)return;let p=j(f),l=o[p];if(!l)return console.warn(`${e.outerHTML} icon name was not found in the provided icons object.`);let i=K(e),[x,h,d]=l,c={...h,"data-lucide":f,...r,...i},g=Z(["lucide",`lucide-${f}`,i,r]);g&&Object.assign(c,{class:g});let m=W([x,c,d]);return e.parentNode?.replaceChild(m,e)};var u={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round"};var R=["svg",u,[["path",{d:"M20 6 9 17l-5-5"}]]];var T=["svg",u,[["rect",{width:"8",height:"4",x:"8",y:"2",rx:"1",ry:"1"}],["path",{d:"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"}],["path",{d:"M12 11h4"}],["path",{d:"M12 16h4"}],["path",{d:"M8 11h.01"}],["path",{d:"M8 16h.01"}]]];var q=["svg",u,[["path",{d:"M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"}],["path",{d:"M6.453 15h11.094"}],["path",{d:"M8.5 2h7"}]]];var O=["svg",u,[["path",{d:"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"}]]];var M=["svg",u,[["circle",{cx:"12",cy:"16",r:"1"}],["rect",{width:"18",height:"12",x:"3",y:"10",rx:"2"}],["path",{d:"M7 10V7a5 5 0 0 1 9.33-2.5"}]]];var U=["svg",u,[["circle",{cx:"12",cy:"16",r:"1"}],["rect",{x:"3",y:"10",width:"18",height:"12",rx:"2"}],["path",{d:"M7 10V7a5 5 0 0 1 10 0v3"}]]];var H=["svg",u,[["polygon",{points:"6 3 20 12 6 21 6 3"}]]];var E=["svg",u,[["path",{d:"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"}],["path",{d:"M3 3v5h5"}]]];var I=["svg",u,[["path",{d:"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"}],["path",{d:"m9 12 2 2 4-4"}]]];var G=["svg",u,[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2"}]]];var X=({icons:e={},nameAttr:t="data-lucide",attrs:o={}}={})=>{if(!Object.values(e).length)throw new Error(`Please provide an icons object.
+If you want to use all the icons you can import it like:
+ \`import { createIcons, icons } from 'lucide';
+lucide.createIcons({icons});\``);if(typeof document>"u")throw new Error("`createIcons()` only works in a browser environment.");let r=document.querySelectorAll(`[${t}]`);if(Array.from(r).forEach(f=>D(f,{nameAttr:t,icons:e,attrs:o})),t==="data-lucide"){let f=document.querySelectorAll("[icon-name]");f.length>0&&(console.warn("[Lucide] Some icons were found with the now deprecated icon-name attribute. These will still be replaced for backwards compatibility, but will no longer be supported in v1.0 and you should switch to data-lucide"),Array.from(f).forEach(p=>D(p,{nameAttr:"icon-name",icons:e,attrs:o})))}};var V=window.location.protocol==="http:"&&window.location.hostname==="127.0.0.1",_={ShieldCheck:I,RotateCcw:E,Square:G,Check:R,ClipboardList:T,FlaskConical:q,FolderOpen:O,Play:H,LockKeyhole:U,LockKeyholeOpen:M},a=e=>document.querySelector(e),$=a("#word-grid"),s=[],A=new Set,k=[],n=null,B=0,N=0;function v(){X({icons:_,attrs:{"aria-hidden":"true"}})}function C(e,t=!1){a("#result").hidden=!1,a("#result").textContent=e,a("#result").className=`result${t?" success":""}`}function F(){n&&(n.abort(),n=null,a("#progress-status").textContent="Cancelled",a("#progress").value=a("#progress").value||0,C("Cancelled. No word has been confirmed.")),P(!1)}function w(){N+=1,F(),a("#result").hidden=!0}function P(e){a("#cancel").disabled=!e,a("#cancel-fixture").disabled=!e,a("#check").disabled=e||!A.size,a("#run-fixture").disabled=e||!k.length,a("#load-fixture").disabled=e||!k.length,a("#fixture").disabled=e||!k.length,a("#budget").disabled=e,V||document.querySelectorAll("input, textarea, select, button").forEach(t=>{t.disabled=!0})}function y(e){return e.normalize("NFKD").toLowerCase().trim()}function S(){let e=[];s.forEach((l,i)=>{let x=y(l.input.value),h=A.has(x);l.root.classList.toggle("is-missing",l.missing.checked),l.root.classList.toggle("is-locked",l.locked),l.input.readOnly=l.locked,l.missing.disabled=l.locked,l.lock.disabled=!h&&!l.locked,l.lock.setAttribute("aria-pressed",String(l.locked)),l.lock.setAttribute("aria-label",`${l.locked?"Unlock":"Lock"} word ${i+1}`),l.lock.title=`${l.locked?"Unlock":"Lock"} word ${i+1}`,l.input.setAttribute("aria-invalid",String(!!x&&!h)),l.status.textContent=x?A.size?h?l.locked?"Known word / locked by you":l.missing.checked?"Candidate / unconfirmed":"BIP-39 word / unlocked":"Not a BIP-39 English word":"Word list unavailable":"Empty",l.status.classList.toggle("invalid",!!x&&!h),l.missing.checked&&e.push(i+1)}),a("#entered-count").textContent=s.filter(l=>l.input.value.trim()).length,a("#locked-count").textContent=s.filter(l=>l.locked).length,a("#missing-count").textContent=e.length,a("#missing-positions").textContent=e.length?`Missing positions: ${e.join(", ")}`:"No missing positions";let t=a("#estimate");if(t.replaceChildren(),!e.length){t.textContent="No missing positions. Complete candidates can still be checked manually.";return}let o=1n<<BigInt(11*e.length),r=1n<<BigInt(11*e.length-s.length/3),f=document.createElement("p");f.textContent=`${o.toLocaleString()} theoretical combinations; about ${r.toLocaleString()} checksum-valid combinations expected.`;let p=document.createElement("p");p.textContent=`${11*e.length-s.length/3} effective bits after checksum filtering. An estimate, not a search or proof of correctness.`,t.append(f,p)}function L(e,t=[]){$.replaceChildren(),s=Array.from({length:e},(o,r)=>{let f=document.createElement("div");f.className="word-slot";let p=document.createElement("div");p.className="slot-heading";let l=document.createElement("label");l.className="slot-number",l.htmlFor=`word-${r+1}`,l.textContent=String(r+1).padStart(2,"0");let i=document.createElement("label");i.className="missing-label";let x=document.createElement("input");x.type="checkbox",x.checked=!t[r],x.setAttribute("aria-label",`Position ${r+1} is missing`),i.append(x,document.createTextNode("Missing")),p.append(l,i);let h=document.createElement("div");h.className="word-entry";let d=document.createElement("input");d.disabled=!V,d.id=`word-${r+1}`,d.type=a("#reveal").checked?"text":"password",d.value=t[r]||"",d.autocomplete="off",d.autocapitalize="none",d.spellcheck=!1,d.maxLength=32,d.setAttribute("aria-label",`Word ${r+1}`),d.setAttribute("aria-describedby",`status-${r+1}`),d.setAttribute("data-1p-ignore",""),d.setAttribute("data-lpignore","true");let c=document.createElement("button");c.type="button",c.className="secondary icon-button",c.innerHTML='<i data-lucide="lock-keyhole-open"></i>';let g=document.createElement("p");g.id=`status-${r+1}`,g.className="word-status",h.append(d,c),f.append(p,h,g),$.append(f);let m={root:f,input:d,lock:c,missing:x,status:g,locked:!1};return d.addEventListener("input",()=>{w(),S()}),x.addEventListener("change",()=>{w(),S()}),c.addEventListener("click",()=>{w(),m.locked=!m.locked,m.locked&&(x.checked=!1),c.innerHTML=`<i data-lucide="${m.locked?"lock-keyhole":"lock-keyhole-open"}"></i>`,v(),S()}),m}),v(),S()}function b(){a("#progress").value=0,a("#progress-status").textContent="Idle",a("#progress-count").textContent="0 checked";for(let e of["#checksum-count","#match-count","#rate"])a(e).textContent="0"}a("#word-count").addEventListener("change",()=>{let e=Number(a("#word-count").value);if(e<s.length&&s.slice(e).some(r=>r.input.value||r.locked)&&!window.confirm(`Discard positions ${e+1}-${s.length} and their locks?`)){a("#word-count").value=String(s.length);return}w();let t=s.map(r=>r.input.value),o=s.map(r=>({locked:r.locked,missing:r.missing.checked}));L(e,t),s.forEach((r,f)=>{o[f]&&(r.locked=o[f].locked,r.missing.checked=o[f].missing,r.lock.innerHTML=`<i data-lucide="${r.locked?"lock-keyhole":"lock-keyhole-open"}"></i>`)}),v(),S(),b()});a("#reveal").addEventListener("change",()=>s.forEach(e=>{e.input.type=a("#reveal").checked?"text":"password"}));a("#clear").addEventListener("click",()=>{w(),a("#phrase").value="",B=0,a("#candidate-count").textContent="0 candidates checked",a("#reveal").checked=!1,L(Number(a("#word-count").value)),b()});a("#cancel").addEventListener("click",F);a("#cancel-fixture").addEventListener("click",F);a("#import").addEventListener("click",()=>{let e=y(a("#phrase").value).split(/\s+/);if(a("#phrase").value="",w(),e.length!==s.length){C(`Expected ${s.length} words. No slots were changed.`);return}s.forEach((t,o)=>{t.locked||(t.input.value=e[o])}),S()});a("#validation-form").addEventListener("submit",async e=>{if(e.preventDefault(),n||!A.size)return;if(s.some(r=>!A.has(y(r.input.value)))){C("Every position needs a BIP-39 English word before checking this candidate.");return}let t=new AbortController;n=t;let o=N;P(!0),b(),a("#progress-status").textContent="Checking candidate",a("#progress").removeAttribute("value");try{let r=await fetch("/api/validate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phrase:s.map(p=>y(p.input.value)).join(" ")}),cache:"no-store",credentials:"same-origin",referrerPolicy:"no-referrer",signal:t.signal}),f=await r.json();if(n!==t||N!==o)return;if(!r.ok)throw new Error("local validation failed");B+=1,a("#candidate-count").textContent=`${B} candidate${B===1?"":"s"} checked`,a("#progress").max=1,a("#progress").value=1,a("#progress-status").textContent="Candidate checked",a("#progress-count").textContent="1 checked",a("#checksum-count").textContent=f.checksum_valid?"1":"0",C(f.checksum_valid?"Checksum valid. Candidate only: no missing word, phrase correctness, or wallet ownership has been confirmed.":"Checksum invalid. This candidate does not satisfy BIP-39.",f.checksum_valid===!0)}catch{n===t&&(a("#progress").value=0,a("#progress-status").textContent="Interrupted",C("Local validation unavailable. No word has been confirmed."))}finally{n===t&&(n=null,P(!1))}});a("#load-fixture").addEventListener("click",()=>{let e=k.find(t=>t.id===a("#fixture").value);e&&(s.some(t=>t.input.value||t.locked)&&!window.confirm("Replace the current words and locks with public test material?")||(w(),a("#word-count").value=String(e.words.length),L(e.words.length,e.words),s.at(-1).missing.checked=!0,S(),b()))});a("#run-fixture").addEventListener("click",async()=>{let e=k.find(f=>f.id===a("#fixture").value),t=s.flatMap((f,p)=>f.missing.checked?[p+1]:[]),o=Number(a("#budget").value);if(!e||e.words.length!==s.length||!t.length){C("Select a fixture with this phrase length and at least one missing position.");return}if(!Number.isInteger(o)||o<1||o>1e5){C("Candidate budget must be an integer from 1 to 100,000.");return}let r=new AbortController;n=r,P(!0),b(),a("#progress").max=Math.min(o,2048**t.length),a("#progress-status").textContent="Starting fixture experiment";try{let f=await fetch("/api/experiment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fixture:e.id,missing_positions:t,max_candidates:o}),cache:"no-store",credentials:"same-origin",referrerPolicy:"no-referrer",signal:r.signal});if(!f.ok||!f.body)throw new Error("local experiment failed");let p=f.body.getReader(),l=new TextDecoder,i="",x=!1;for(;;){let{value:h,done:d}=await p.read();if(n!==r)return;i+=l.decode(h,{stream:!d});let c=i.split(`
+`);i=c.pop();for(let g of c){if(!g)continue;let m=JSON.parse(g);a("#progress").value=m.checked,a("#progress-status").textContent={running:"Running public fixture",completed:"Completed",limit_reached:"Budget reached / partial search",cancelled:"Cancelled"}[m.status],a("#progress-count").textContent=`${m.checked.toLocaleString()} / ${Math.min(o,m.total_candidates).toLocaleString()} checked`,a("#checksum-count").textContent=m.checksum_valid,a("#match-count").textContent=m.fixture_matches,a("#rate").textContent=Math.round(m.elapsed_seconds>0?m.checked/m.elapsed_seconds:0).toLocaleString(),x=m.status!=="running"}if(d)break}if(!x)throw new Error("incomplete run");C("Fixture experiment finished. Results apply only to the built-in public fixture; your entered words were not searched or confirmed.")}catch{n===r&&(a("#progress-status").textContent="Interrupted",C("Local fixture experiment unavailable or interrupted. No word has been confirmed."))}finally{n===r&&(n=null,P(!1))}});window.addEventListener("pagehide",()=>{F(),a("#phrase").value="",s.forEach(e=>{e.input.value="",e.locked=!1})});window.addEventListener("pageshow",e=>{e.persisted&&(w(),a("#reveal").checked=!1,L(Number(a("#word-count").value)),B=0,a("#candidate-count").textContent="0 candidates checked",b())});L(12);v();V?fetch("/api/reference",{cache:"no-store",credentials:"same-origin",referrerPolicy:"no-referrer"}).then(e=>{if(!e.ok)throw new Error("local word list unavailable");return e.json()}).then(e=>{A=new Set(e.wordlist),k=e.fixtures;for(let t of k){let o=document.createElement("option");o.value=t.id,o.textContent=`${t.id} / ${t.words.length} words`,a("#fixture").append(o)}a("#reference-status").textContent="2,048 English words / local",P(!1),S()}).catch(()=>{a("#reference-status").textContent="Local word list unavailable",C("Local reference data could not be loaded. Candidate checks are disabled.")}):(P(!1),a("#reference-status").textContent="Non-loopback origin blocked",C("Recovery input is disabled on hosted or forwarded origins. Use HTTP loopback on a trusted offline device."));})();
+/*! Bundled license information:
 
-const form = document.querySelector("#validation-form");
-const phraseField = document.querySelector("#phrase");
-const resultPanel = document.querySelector("#result");
-const wordCountField = document.querySelector("#word-count");
-const positionGrid = document.querySelector("#position-grid");
-const estimatePanel = document.querySelector("#estimate");
-
-function showResult(message, isValid) {
-  resultPanel.replaceChildren();
-  resultPanel.hidden = false;
-  resultPanel.className = `result ${isValid ? "success" : "failure"}`;
-  const heading = document.createElement("strong");
-  heading.textContent = message;
-  resultPanel.append(heading);
-}
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const phrase = phraseField.value;
-  phraseField.value = "";
-  resultPanel.hidden = true;
-
-  if (!phrase.trim()) {
-    showResult("Enter a phrase to validate.", false);
-    return;
-  }
-
-  try {
-    const response = await fetch("/api/validate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phrase }),
-      cache: "no-store",
-      credentials: "same-origin",
-      referrerPolicy: "no-referrer",
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      showResult("Validation request was rejected.", false);
-      return;
-    }
-
-    const invalid = data.invalid_words || [];
-    if (invalid.length > 0) {
-      showResult(
-        `Unknown English words: ${invalid.map((item) => {
-          const suggestions = item.suggestions.length > 0
-            ? `; possible spelling: ${item.suggestions.join(", ")}`
-            : "";
-          return `${item.word} (position ${item.position}${suggestions})`;
-        }).join(", ")}`,
-        false,
-      );
-    } else if (data.checksum_valid) {
-      showResult(
-        `${data.word_count} words · checksum valid. This does not confirm wallet ownership or correctness.`,
-        true,
-      );
-    } else if (data.checksum_valid === false) {
-      showResult(`${data.word_count} words · checksum invalid.`, false);
-    } else {
-      showResult(`${data.word_count} words · unsupported phrase length.`, false);
-    }
-  } catch {
-    showResult("Could not reach the local service. The phrase field was cleared.", false);
-  }
-});
-
-function renderPositions() {
-  positionGrid.replaceChildren();
-  const wordCount = Number(wordCountField.value);
-  for (let position = 1; position <= wordCount; position += 1) {
-    const label = document.createElement("label");
-    label.className = "position";
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = String(position);
-    checkbox.setAttribute("aria-label", `Position ${position} is missing`);
-    const number = document.createElement("span");
-    number.textContent = String(position).padStart(2, "0");
-    label.append(checkbox, number);
-    positionGrid.append(label);
-  }
-  updateEstimate();
-}
-
-function updateEstimate() {
-  const wordCount = Number(wordCountField.value);
-  const missingCount = positionGrid.querySelectorAll("input:checked").length;
-  if (missingCount === 0) {
-    estimatePanel.textContent = "Select at least one missing position to see an estimate.";
-    return;
-  }
-
-  const checksumBits = wordCount / 3;
-  const possible = 1n << BigInt(11 * missingCount);
-  const expectedValid = 1n << BigInt(11 * missingCount - checksumBits);
-  const formatter = new Intl.NumberFormat();
-  estimatePanel.replaceChildren();
-  const details = document.createElement("p");
-  details.textContent =
-    `${missingCount} missing · ${formatter.format(possible)} theoretical combinations · ` +
-    `about ${formatter.format(expectedValid)} checksum-valid combinations expected`;
-  const complexity = document.createElement("span");
-  complexity.textContent = `${11 * missingCount - checksumBits} effective bits after checksum filtering`;
-  estimatePanel.append(details, complexity);
-}
-
-wordCountField.addEventListener("change", renderPositions);
-positionGrid.addEventListener("change", updateEstimate);
-renderPositions();
+lucide/dist/esm/createElement.js:
+lucide/dist/esm/replaceElement.js:
+lucide/dist/esm/defaultAttributes.js:
+lucide/dist/esm/icons/check.js:
+lucide/dist/esm/icons/clipboard-list.js:
+lucide/dist/esm/icons/flask-conical.js:
+lucide/dist/esm/icons/folder-open.js:
+lucide/dist/esm/icons/lock-keyhole-open.js:
+lucide/dist/esm/icons/lock-keyhole.js:
+lucide/dist/esm/icons/play.js:
+lucide/dist/esm/icons/rotate-ccw.js:
+lucide/dist/esm/icons/shield-check.js:
+lucide/dist/esm/icons/square.js:
+lucide/dist/esm/lucide.js:
+  (**
+   * @license lucide v0.468.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   *)
+*/

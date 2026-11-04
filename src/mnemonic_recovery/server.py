@@ -3,12 +3,23 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from importlib.resources import files
+from threading import Event
 from typing import cast
 from urllib.parse import urlsplit
 
-from mnemonic_recovery.core import validate_mnemonic
+from mnemonic import Mnemonic
+
+from mnemonic_recovery.core import estimate_search_space, validate_mnemonic
+from mnemonic_recovery.experiments import (
+    FIXTURES,
+    MAX_CANDIDATES,
+    Progress,
+    fixture_words,
+    run_experiment,
+)
 
 _ASSETS = {
     "/": ("index.html", "text/html; charset=utf-8"),
@@ -54,6 +65,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = urlsplit(self.path).path
+        if path == "/api/reference":
+            self._respond_json(
+                200,
+                {
+                    "wordlist": Mnemonic("english").wordlist,
+                    "fixtures": [
+                        {"id": fixture, "words": fixture_words(fixture)}
+                        for fixture in FIXTURES
+                    ],
+                },
+            )
+            return
         if path == "/favicon.ico":
             self.send_response(204)
             self.end_headers()
@@ -72,7 +95,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if (
             self.headers.get("Host") != expected_host
             or self.headers.get("Origin") != f"http://{expected_host}"
-            or urlsplit(self.path).path != "/api/validate"
+            or urlsplit(self.path).path not in ("/api/validate", "/api/experiment")
             or self.headers.get_content_type() != "application/json"
         ):
             self._respond_json(403, {"error": "Request rejected."})
@@ -91,6 +114,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(content_length))
         except (UnicodeDecodeError, json.JSONDecodeError):
             self._respond_json(400, {"error": "Invalid request."})
+            return
+        if urlsplit(self.path).path == "/api/experiment":
+            self._experiment(payload)
             return
         if (
             not isinstance(payload, dict)
@@ -118,6 +144,56 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 "checksum_valid": result.checksum_valid,
             },
         )
+
+    def _experiment(self, payload: object) -> None:
+        if (
+            not isinstance(payload, dict)
+            or set(payload) != {"fixture", "missing_positions", "max_candidates"}
+            or not isinstance(payload["fixture"], str)
+            or payload["fixture"] not in FIXTURES
+            or not isinstance(payload["missing_positions"], list)
+            or isinstance(payload["max_candidates"], bool)
+            or not isinstance(payload["max_candidates"], int)
+            or not 1 <= payload["max_candidates"] <= MAX_CANDIDATES
+        ):
+            self._respond_json(400, {"error": "Invalid fixture experiment."})
+            return
+        try:
+            estimate_search_space(
+                len(fixture_words(payload["fixture"])), payload["missing_positions"]
+            )
+        except ValueError:
+            self._respond_json(400, {"error": "Invalid fixture experiment."})
+            return
+
+        cancel = Event()
+
+        def report(progress: Progress) -> None:
+            if cancel.is_set():
+                return
+            try:
+                self.wfile.write(
+                    json.dumps(asdict(progress), separators=(",", ":")).encode() + b"\n"
+                )
+                self.wfile.flush()
+            except OSError:
+                cancel.set()
+
+        self.close_connection = True
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+            self.end_headers()
+            run_experiment(
+                payload["fixture"],
+                payload["missing_positions"],
+                max_candidates=payload["max_candidates"],
+                progress_every=32,
+                cancel=cancel,
+                on_progress=report,
+            )
+        except OSError:
+            cancel.set()
 
 
 def serve_dashboard(port: int = 8765) -> None:
