@@ -100,4 +100,4 @@ Dependency/browser installation, `pip-audit`, and `npm audit` access package/adv
 
 ## License
 
-The source code is provided without a declared license at this initial stage. See the project owner for licensing terms before reuse.
+Licensed under the [Apache License 2.0](LICENSE).
