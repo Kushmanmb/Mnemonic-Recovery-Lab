@@ -6,6 +6,8 @@ on:
       - 'offline-app/**'
       - 'tests/web/offline.spec.js'
       - '.github/workflows/offline-release.yml'
+      - 'scripts/build_offline_release.py'
+      - 'tests/test_offline_release.py'
 permissions:
   contents: read
 jobs:
@@ -27,23 +29,18 @@ jobs:
         run: npx playwright test tests/web/offline.spec.js
       - name: Check bundled scripts parse
         run: node --check offline-app/app.js && node --check offline-app/wordlist.js
-      - name: Create auditable release candidate
+      - name: Build reproducible release candidate
+        run: python scripts/build_offline_release.py --out dist
+      - name: Verify the build is reproducible
         shell: bash
         run: |
-          mkdir -p dist
-          python - <<'PY'
-          from pathlib import Path
-          from zipfile import ZipFile, ZIP_DEFLATED
-          folder = Path('offline-app')
-          files = ['index.html', 'styles.css', 'app.js', 'wordlist.js', 'README.md']
-          with ZipFile('dist/gen0x-offline-validator-rc.zip', 'w', ZIP_DEFLATED) as archive:
-              for file in files:
-                  archive.write(folder / file, arcname='offline-app/' + file)
-          PY
-          cd dist
-          sha256sum gen0x-offline-validator-rc.zip > SHA256SUMS
+          touch -d '2001-01-01 00:00:00' offline-app/*
+          python scripts/build_offline_release.py --out dist-rebuild
+          cmp dist/mnemonic-recovery-offline-app.zip dist-rebuild/mnemonic-recovery-offline-app.zip
+          diff dist/SHA256SUMS dist-rebuild/SHA256SUMS
+          echo "Reproducible: $(head -1 dist/SHA256SUMS)" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: gen0x-offline-validator-release-candidate
+          name: mnemonic-recovery-offline-app-release-candidate
           path: dist/
           if-no-files-found: error
